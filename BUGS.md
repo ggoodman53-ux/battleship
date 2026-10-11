@@ -1,3 +1,18 @@
+# QA summary
+
+**Total bugs found:** 10.
+
+**How they were found:**
+- Code review: 1 (#1).
+- Automated test: 1 (#2).
+- Devin Review: 4 (#3, #4, #9, and #10).
+- Browser play-testing: 1 (#5).
+- Independent QA: 3 (#6–#8); #6 was found by code review and confirmed in the browser, while #7 and #8 were found by play-testing.
+
+- **Misclick deletes your ship (#7):** While placing the Battleship, clicking a square that overlapped your Carrier didn't just say "doesn't fit", it quietly lifted the Carrier off the board.
+- **The AI and touching ships (#3):** When two ships touched end-to-end, sinking one could make the AI treat the wrong squares as sunk, leaving part of the sunk ship as a live target and marking the other ship's squares as finished.
+- **Ghost ship on phones (#8):** After you tapped to place a ship, a red "doesn't fit" outline of the next ship stayed drawn over the one you'd just placed, so a valid placement looked like an error.
+
 # Bug log
 
 Real bugs found while building and testing this game, in the order they were found. Each entry says what went wrong, how it was found, why it happened, and how it was fixed.
@@ -64,4 +79,64 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
-Apart from these, no bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.
+## 6. Holding R could rotate the ship back and forth
+
+**What went wrong:** During setup, holding R first turned the ship, then repeated key events turned it back again. The direction could keep changing for as long as the key was held.
+
+**How it was found:** Independent QA code review of the key handler, confirmed in the browser with a held key.
+
+**Root cause:** The page-level R shortcut handled repeating keydown events just like the first keydown, so each repeat toggled the direction again.
+
+**How it was fixed:** The key handler now ignores repeating keydown events. The automated test `UI Bug 6: holding R does not rotate repeatedly` checks that the direction stays vertical after the repeated event.
+
+---
+
+## 7. A placement misclick could pick up a ship that was already on the board
+
+**What went wrong:** While placing the Battleship, clicking a square that overlapped the Carrier did not just say it didn't fit: it quietly lifted the Carrier off the board.
+
+**How it was found:** Independent QA browser play-testing, with a misclick during placement.
+
+**Root cause:** After a selected ship failed its placement check, the code picked up any ship occupying the clicked square. That pickup was intended for when no ship was selected, not when a player was trying to place another ship.
+
+**How it was fixed:** A ship on the board is now picked up by clicking its cell only when no ship is selected. With a ship selected, an invalid placement keeps the existing "doesn't fit" message and leaves the placed ship in place. The tests `UI Bug 7: a placement misclick does not pick up the occupying ship` and `UI ship pickup still works when no ship is selected` cover both cases.
+
+---
+
+## 8. A touch placement left the next ship's invalid preview on the board
+
+**What went wrong:** On a phone-sized touch viewport, tapping to place a ship left a red "doesn't fit" outline for the next ship over the ship just placed, making the valid placement look like an error.
+
+**How it was found:** Independent QA play-testing on a phone-sized touch viewport.
+
+**Root cause:** The click handler cleared the tap's preview anchor after placing the ship, but the tapped cell remained focused. When the pointer later left the grid, the `mouseleave` handler re-anchored the preview to that focused cell without checking the input type, bringing back the next ship's red outline.
+
+**How it was fixed:** The game remembers the pointer type from pointer down and pointer over events. It clears the preview anchor only after a successful touch placement, and when the pointer leaves it restores a preview from the focused cell unless the last pointer was touch. Mouse and hover-capable pen previews remain visible, and keyboard previews still work. The tests `UI Bug 8: touch placement stays clear after the pointer leaves the grid`, `UI desktop mouseleave keeps the next-ship preview on the focused cell`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
+
+---
+
+## 9. The touch-preview fix also hid the preview for hovering styluses
+
+**What went wrong:** With a hover-capable stylus, the next ship's preview disappeared after placing the Carrier even though the stylus was still hovering over A1. It stayed missing until the stylus moved.
+
+**How it was found:** Devin Review, while reviewing the independent QA pull request.
+
+**Root cause:** Bug 8's fix treated every non-mouse pointer as unable to hover. That included pen input, even though a hovering stylus can continue to show a preview at the cell.
+
+**How it was fixed:** The game now treats only touch as non-hover input. Pen placement keeps the next ship's preview while the stylus hovers, and mouseleave restores the focused-cell preview unless the last pointer was touch. The test `UI Bug 9: pen placement keeps the next-ship hover preview` checks placement and mouseleave behavior.
+
+---
+
+## 10. New Game kept the previous game's pointer type
+
+**What went wrong:** After a touch game, starting a new game and focusing a grid cell did not restore its preview when the pointer left the grid. The new game still behaved as if the last pointer was touch.
+
+**How it was found:** Devin Review, while reviewing the independent QA pull request.
+
+**Root cause:** `newGame()` reset the preview anchor and hover flag but not `lastPointerType`, so a touch from the last game still blocked the focused-cell preview on mouseleave.
+
+**How it was fixed:** `newGame()` now resets `lastPointerType` along with the other preview state. The test `UI Bug 10: New Game resets the remembered pointer type` checks that focusing a cell in a new game restores its preview after mouseleave when there has been no new pointer input.
+
+---
+
+Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA and Devin Review later found the issues recorded in entries 6–10. The browser console showed no errors during the earlier testing.
