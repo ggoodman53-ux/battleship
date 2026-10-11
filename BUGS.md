@@ -28,4 +28,16 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
-No other bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.
+## 3. The computer could get confused about which of its targets it had already sunk when two ships touched
+
+**What went wrong:** When two of your ships lay end to end and the computer had hit both, sinking one of them could make the computer mark the wrong squares as "sunk". For example, with the Destroyer on A1-A2 and the Cruiser on A3-A5, the computer hits A1, A3 and A4, then sinks the Destroyer with a shot at A2. It then wrongly decides the Destroyer was A2-A3. It treats A3, which belongs to the still-floating Cruiser, as finished, and keeps treating A1, which belongs to the sunk Destroyer, as a live target. On Normal and Hard this sent its next shots in the wrong direction.
+
+**How it was found:** Devin Review, an automated code review run on the pull request.
+
+**Root cause:** When a ship sank, the game only told the computer "you sank a ship of length 2", not which squares it was on. The computer had to guess from the row of hits it had made. When hits on two different ships sat side by side, more than one guess fit, and it could pick the wrong one.
+
+**How it was fixed:** The game now tells the computer exactly which squares the sunk ship occupied, and the computer marks exactly those squares as sunk. This gives it no unfair advantage, because the player's screen shows the exact squares of every ship they sink too. The guessing code was removed. A new automated test sets up this exact layout and checks that A1-A2 are marked sunk while A3-A4 stay live targets.
+
+---
+
+Apart from these, no bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.

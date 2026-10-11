@@ -47,7 +47,8 @@ module.exports = function ({ test, assert }) {
         row: shot.row,
         col: shot.col,
         result: result.result,
-        shipSize: result.result === 'sunk' ? result.ship.size : undefined
+        shipSize: result.result === 'sunk' ? result.ship.size : undefined,
+        cells: result.cells
       });
       if (result.result === 'hit') observedHits.add(shot.row + ',' + shot.col);
       if (result.result === 'sunk') {
@@ -59,6 +60,63 @@ module.exports = function ({ test, assert }) {
     assert.strictEqual(board.isSunk('battleship'), true);
     assert.strictEqual(board.isSunk('destroyer'), true);
     assert.strictEqual(observedHits.size, 0);
+  });
+
+  test('sunk resolution marks the exact ship cells when ships touch end to end', function () {
+    ['normal', 'hard'].forEach(function (difficulty) {
+      const board = new Board();
+      board.placeShip('destroyer', 0, 0, 'H');
+      board.placeShip('cruiser', 0, 2, 'H');
+      const ai = createAI(difficulty, function () { return 0; });
+      [[0, 0], [0, 2], [0, 3]].forEach(function (coordinate) {
+        const result = board.receiveShot(coordinate[0], coordinate[1]);
+        assert.strictEqual(result.result, 'hit');
+        ai.recordResult({
+          row: coordinate[0],
+          col: coordinate[1],
+          result: result.result
+        });
+      });
+
+      const sinkingResult = board.receiveShot(0, 1);
+      assert.strictEqual(sinkingResult.result, 'sunk');
+      assert.deepStrictEqual(sinkingResult.cells, [{ row: 0, col: 0 }, { row: 0, col: 1 }]);
+      ai.recordResult({
+        row: 0,
+        col: 1,
+        result: sinkingResult.result,
+        shipSize: sinkingResult.ship.size,
+        cells: sinkingResult.cells
+      });
+
+      if (difficulty === 'normal') {
+        assert.deepStrictEqual(ai.nextShot(), { row: 0, col: 4 });
+      }
+      assert.strictEqual(ai.knowledgeAt(0, 0), 'sunk');
+      assert.strictEqual(ai.knowledgeAt(0, 1), 'sunk');
+      assert.strictEqual(ai.knowledgeAt(0, 2), 'hit');
+      assert.strictEqual(ai.knowledgeAt(0, 3), 'hit');
+      assert.strictEqual(ai.knowledgeAt(5, 5), null);
+      assert.throws(function () { ai.knowledgeAt(-1, 0); }, RangeError);
+    });
+  });
+
+  test('recordResult rejects sunk results with missing or mismatched cells', function () {
+    const missingCellsAI = createAI('normal', function () { return 0; });
+    assert.throws(function () {
+      missingCellsAI.recordResult({ row: 0, col: 0, result: 'sunk', shipSize: 2 });
+    }, /cells/);
+
+    const mismatchedCellsAI = createAI('hard', function () { return 0; });
+    assert.throws(function () {
+      mismatchedCellsAI.recordResult({
+        row: 0,
+        col: 0,
+        result: 'sunk',
+        shipSize: 2,
+        cells: [{ row: 0, col: 0 }]
+      });
+    }, /cells/);
   });
 
   test('hard targets an untried cell adjacent to a lone hit', function () {

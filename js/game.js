@@ -270,7 +270,8 @@
         row: row,
         col: col,
         result: result.result,
-        shipSize: result.result === 'sunk' ? result.ship.size : undefined
+        shipSize: result.result === 'sunk' ? result.ship.size : undefined,
+        cells: result.cells
       });
       this.log.push({ by: 'computer', result: result });
       if (this.playerBoard.allSunk()) {

@@ -189,38 +189,6 @@
       return choose(best.length ? best : untriedCells());
     }
 
-    function resolveSunkShip(row, col, size) {
-      const candidates = [];
-      for (const orientation of ['H', 'V']) {
-        for (let offset = 0; offset < size; offset += 1) {
-          const startRow = orientation === 'H' ? row : row - offset;
-          const startCol = orientation === 'H' ? col - offset : col;
-          const cells = game.shipCells(startRow, startCol, size, orientation);
-          if (!cells.every(function (cell) {
-            return game.inBounds(cell.row, cell.col) && knowledge[cell.row][cell.col] === 'hit';
-          })) continue;
-          const sinkIsEndpoint = offset === 0 || offset === size - 1;
-          const hasAlignedHit = cells.some(function (cell) {
-            return cell.row !== row || cell.col !== col;
-          });
-          candidates.push({
-            cells: cells,
-            preferred: sinkIsEndpoint && hasAlignedHit
-          });
-        }
-      }
-
-      const selected = candidates.find(function (candidate) { return candidate.preferred; }) ||
-        candidates[0];
-      if (selected) {
-        selected.cells.forEach(function (cell) {
-          knowledge[cell.row][cell.col] = 'sunk';
-        });
-      } else {
-        knowledge[row][col] = 'sunk';
-      }
-    }
-
     return {
       nextShot: function () {
         const shot = difficulty === 'easy'
@@ -244,14 +212,43 @@
           knowledge[shot.row][shot.col] = 'miss';
           return;
         }
+        if (shot.result === 'sunk') {
+          if (!Number.isInteger(shot.shipSize) || shot.shipSize < 1 ||
+              !Array.isArray(shot.cells) || shot.cells.length !== shot.shipSize) {
+            throw new Error('Sunk result cells must match shipSize');
+          }
+          const seen = new Set();
+          let containsShot = false;
+          shot.cells.forEach(function (cell) {
+            if (!cell || !game.inBounds(cell.row, cell.col)) {
+              throw new Error('Sunk result cells must be in bounds');
+            }
+            const key = cell.row + ',' + cell.col;
+            if (seen.has(key)) throw new Error('Sunk result cells must be unique');
+            seen.add(key);
+            if (cell.row === shot.row && cell.col === shot.col) {
+              containsShot = true;
+            } else if (knowledge[cell.row][cell.col] !== 'hit') {
+              throw new Error('Every other sunk result cell must already be a hit');
+            }
+          });
+          if (!containsShot) throw new Error('Sunk result cells must include the shot cell');
+
+          shot.cells.forEach(function (cell) {
+            knowledge[cell.row][cell.col] = 'sunk';
+          });
+          const sizeIndex = remainingSizes.indexOf(shot.shipSize);
+          if (sizeIndex !== -1) remainingSizes.splice(sizeIndex, 1);
+          return;
+        }
         knowledge[shot.row][shot.col] = 'hit';
         latestHit += 1;
         hitOrder[shot.row][shot.col] = latestHit;
-        if (shot.result === 'sunk') {
-          resolveSunkShip(shot.row, shot.col, shot.shipSize);
-          const sizeIndex = remainingSizes.indexOf(shot.shipSize);
-          if (sizeIndex !== -1) remainingSizes.splice(sizeIndex, 1);
-        }
+      },
+
+      knowledgeAt: function (row, col) {
+        if (!game.inBounds(row, col)) throw new RangeError('Coordinate is off the board');
+        return knowledge[row][col];
       }
     };
   }

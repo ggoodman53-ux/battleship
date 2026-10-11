@@ -81,7 +81,8 @@ function shotsToSinkFleet(difficulty, boardSeed, aiSeed, assert) {
       row: shot.row,
       col: shot.col,
       result: result.result,
-      shipSize: result.result === 'sunk' ? result.ship.size : undefined
+      shipSize: result.result === 'sunk' ? result.ship.size : undefined,
+      cells: result.cells
     });
     assert.ok(seen.size <= SIZE * SIZE, difficulty + ' needed more than 100 shots');
   }
