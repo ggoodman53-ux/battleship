@@ -287,11 +287,14 @@
 
   function renderSetup() {
     if (game.phase !== 'setup') return;
+    var active = document.activeElement;
+    var focusedShipId = active && els.shipPicker.contains(active) ? active.dataset.shipId : null;
     els.shipPicker.innerHTML = '';
     FLEET.forEach(function (ship) {
       var placed = !!game.playerBoard.getShip(ship.id);
       var btn = document.createElement('button');
       btn.type = 'button';
+      btn.dataset.shipId = ship.id;
       btn.className = 'ship-btn' + (ship.id === selectedShipId ? ' is-selected' : '') + (placed ? ' is-placed' : '');
       btn.setAttribute('aria-pressed', ship.id === selectedShipId ? 'true' : 'false');
       btn.setAttribute('aria-label', ship.name + ', length ' + ship.size + (placed ? ', placed' : ', not placed'));
@@ -301,6 +304,10 @@
       btn.addEventListener('click', function () { selectShip(ship.id); });
       els.shipPicker.appendChild(btn);
     });
+    if (focusedShipId) {
+      var focusedButton = els.shipPicker.querySelector('[data-ship-id="' + focusedShipId + '"]');
+      if (focusedButton) focusedButton.focus();
+    }
     els.rotate.textContent = 'Rotate: ' + (orientation === 'H' ? 'Horizontal' : 'Vertical');
     els.rotate.setAttribute('aria-label', 'Rotate ship, currently ' + (orientation === 'H' ? 'horizontal' : 'vertical'));
     els.start.disabled = !game.playerBoard.allPlaced();

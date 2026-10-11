@@ -52,4 +52,16 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
+## 5. Choosing a ship with the keyboard threw you back to the top of the page
+
+**What went wrong:** During setup, a keyboard player who moved to a ship in the ship list and pressed Enter to choose it lost their place. The ship was selected, but the keyboard cursor jumped back to the start of the page. The next Tab started over from the top instead of moving on toward the grid.
+
+**How it was found:** Browser play-testing with keyboard navigation, while checking the fix for bug 4.
+
+**Root cause:** Every time a ship was chosen, the game threw away the whole row of ship buttons and drew a fresh row to show the new selection. The button the player was on no longer existed, so the browser had nowhere to keep the keyboard cursor and reset it to the top of the page.
+
+**How it was fixed:** After redrawing the ship buttons, the game now puts the keyboard cursor back on the button for the ship the player was on. This was checked in the browser: after pressing Enter on a ship, the cursor stays on that ship and the next Tab moves on to the next control.
+
+---
+
 Apart from these, no bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.
