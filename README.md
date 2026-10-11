@@ -6,7 +6,7 @@ A browser Battleship game against a computer opponent. Plain HTML, CSS and JavaS
 
 ## How to play
 
-1. **Place your fleet** on *Your Fleet*: pick a ship, hover over a cell to preview it (the preview shows whether the spot is valid), then click to place. Press **R** or **Rotate** to switch between horizontal and vertical. Click a placed ship's button to move it. You can also use **Randomize**.
+1. **Place your fleet** on *Your Fleet*: pick a ship, hover over a cell to preview it (the preview shows whether the spot is valid), then click to place. Press **R** while on *Your Fleet*, or use **Rotate**, to switch between horizontal and vertical. Click a placed ship's button to move it. You can also use **Randomize**.
 2. Press **Start Game** once all five ships are placed.
 3. Fire by clicking a cell in *Enemy Waters*, or use the arrow keys and Enter/Space. You go first. Each shot reports Hit, Miss, or "Sunk: [ship]". You can't fire at the same cell twice.
 4. The first side to sink the whole enemy fleet wins. The computer's ships are revealed at the end. **New Game** resets everything at any time.

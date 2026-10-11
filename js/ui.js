@@ -37,6 +37,7 @@
 
   var game = null;
   var computerTimer = null;
+  var pointerOverPlayerGrid = false;
   var selectedShipId = null;
   var orientation = 'H';
   var previewAnchor = null;
@@ -90,6 +91,7 @@
 
   function newGame() {
     cancelComputerTurn();
+    pointerOverPlayerGrid = false;
     game = new G.Game({ difficulty: els.difficulty.value });
     selectedShipId = FLEET[0].id;
     orientation = 'H';
@@ -478,6 +480,9 @@
       previewAnchor = { row: pos.row, col: pos.col };
       placeAt(pos.row, pos.col);
     });
+    els.playerGrid.addEventListener('mouseenter', function () {
+      pointerOverPlayerGrid = true;
+    });
     els.playerGrid.addEventListener('mouseover', function (e) {
       var pos = cellFromEvent(e);
       if (!pos || game.phase !== 'setup') return;
@@ -493,6 +498,7 @@
       renderPreview();
     });
     els.playerGrid.addEventListener('mouseleave', function () {
+      pointerOverPlayerGrid = false;
       if (document.activeElement && els.playerGrid.contains(document.activeElement)) {
         var pos = cellFromEvent({ target: document.activeElement });
         previewAnchor = pos ? { row: pos.row, col: pos.col } : null;
@@ -524,9 +530,9 @@
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'r' && e.key !== 'R') return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      var tag = e.target && e.target.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (!game || game.phase !== 'setup') return;
+      var onGrid = els.playerGrid.contains(document.activeElement);
+      if (!onGrid && !pointerOverPlayerGrid) return;
       e.preventDefault();
       rotate();
     });

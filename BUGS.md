@@ -40,4 +40,16 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
+## 4. Pressing R rotated your ship even when you were somewhere else on the page
+
+**What went wrong:** During setup, R is the shortcut to turn the ship you're placing. But it worked no matter what was selected on the page. A player moving through the buttons with the keyboard (for example, on New Game or Randomize) who pressed R would see their ship's direction flip without meaning to.
+
+**How it was found:** Devin Review, an automated code review run on the pull request.
+
+**Root cause:** The game listened for the R key across the whole page and only ignored it inside text boxes and drop-down menus. It never checked whether the player was actually working on the placement grid.
+
+**How it was fixed:** R now rotates the ship only when a square on Your Fleet is selected with the keyboard, or when the mouse is over Your Fleet. Everywhere else on the page, R does nothing. The Rotate button still works with a mouse click, Enter or Space. This was checked in the browser using keyboard navigation.
+
+---
+
 Apart from these, no bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.
