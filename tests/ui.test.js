@@ -169,6 +169,20 @@ module.exports = function ({ test, assert }) {
     assert.ok(ui.previewCells().indexOf(cell) !== -1);
   });
 
+  test('UI Bug 9: pen placement keeps the next-ship hover preview', function () {
+    const ui = createHarness();
+    const cell = ui.cell('player-grid', 0, 0);
+    ui.pointerdown(cell, 'pen');
+    ui.pointerover(cell, 'pen');
+    ui.mouseover(cell);
+    cell.focus();
+    ui.click(cell, { detail: 1 });
+    assert.ok(ui.previewCells().indexOf(cell) !== -1);
+    assert.ok(cell.classList.contains('preview-invalid'));
+    ui.mouseleave(ui.document.getElementById('player-grid'));
+    assert.ok(ui.previewCells().indexOf(cell) !== -1);
+  });
+
   test('UI desktop mouse placement keeps the next-ship preview at the pointer', function () {
     const ui = createHarness();
     const cell = ui.cell('player-grid', 0, 0);

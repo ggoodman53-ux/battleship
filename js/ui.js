@@ -495,7 +495,7 @@
       var placementSucceeded = !!selectedShipId &&
         game.playerBoard.canPlace(selectedShipId, pos.row, pos.col, orientation);
       placeAt(pos.row, pos.col);
-      if (placementSucceeded && e.detail > 0 && lastPointerType && lastPointerType !== 'mouse') {
+      if (placementSucceeded && e.detail > 0 && lastPointerType === 'touch') {
         previewAnchor = null;
         renderPreview();
       }
@@ -520,7 +520,7 @@
     els.playerGrid.addEventListener('mouseleave', function () {
       pointerOverPlayerGrid = false;
       if (document.activeElement && els.playerGrid.contains(document.activeElement) &&
-          (lastPointerType === null || lastPointerType === 'mouse')) {
+          lastPointerType !== 'touch') {
         var pos = cellFromEvent({ target: document.activeElement });
         previewAnchor = pos ? { row: pos.row, col: pos.col } : null;
       } else {

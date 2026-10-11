@@ -1,11 +1,11 @@
 # QA summary
 
-**Total bugs found:** 8.
+**Total bugs found:** 9.
 
 **How they were found:**
 - Code review: 1 (#1).
 - Automated test: 1 (#2).
-- Devin Review: 2 (#3 and #4).
+- Devin Review: 3 (#3, #4, and #9).
 - Browser play-testing: 1 (#5).
 - Independent QA: 3 (#6–#8); #6 was found by code review and confirmed in the browser, while #7 and #8 were found by play-testing.
 
@@ -111,8 +111,20 @@ Real bugs found while building and testing this game, in the order they were fou
 
 **Root cause:** The click handler cleared the tap's preview anchor after placing the ship, but the tapped cell remained focused. When the pointer later left the grid, the `mouseleave` handler re-anchored the preview to that focused cell without checking the input type, bringing back the next ship's red outline.
 
-**How it was fixed:** The game remembers the pointer type from pointer down and pointer over events. After a touch placement it clears the preview anchor, and when the pointer leaves it only restores a preview from the focused cell for mouse input or when the pointer type is unknown. Mouse and keyboard previews still work. The tests `UI Bug 8: touch placement stays clear after the pointer leaves the grid`, `UI desktop mouseleave keeps the next-ship preview on the focused cell`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
+**How it was fixed:** The game remembers the pointer type from pointer down and pointer over events. It clears the preview anchor only after a successful touch placement, and when the pointer leaves it restores a preview from the focused cell unless the last pointer was touch. Mouse and hover-capable pen previews remain visible, and keyboard previews still work. The tests `UI Bug 8: touch placement stays clear after the pointer leaves the grid`, `UI desktop mouseleave keeps the next-ship preview on the focused cell`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
 
 ---
 
-Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA later found the issues recorded in entries 6–8. The browser console showed no errors during the earlier testing.
+## 9. The touch-preview fix also hid the preview for hovering styluses
+
+**What went wrong:** With a hover-capable stylus, the next ship's preview disappeared after placing the Carrier even though the stylus was still hovering over A1. It stayed missing until the stylus moved.
+
+**How it was found:** Devin Review, while reviewing the independent QA pull request.
+
+**Root cause:** Bug 8's fix treated every non-mouse pointer as unable to hover. That included pen input, even though a hovering stylus can continue to show a preview at the cell.
+
+**How it was fixed:** The game now treats only touch as non-hover input. Pen placement keeps the next ship's preview while the stylus hovers, and mouseleave restores the focused-cell preview unless the last pointer was touch. The test `UI Bug 9: pen placement keeps the next-ship hover preview` checks placement and mouseleave behavior.
+
+---
+
+Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA and Devin Review later found the issues recorded in entries 6–9. The browser console showed no errors during the earlier testing.
