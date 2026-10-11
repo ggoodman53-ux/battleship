@@ -38,6 +38,7 @@
   var game = null;
   var computerTimer = null;
   var pointerOverPlayerGrid = false;
+  var lastPointerType = null;
   var selectedShipId = null;
   var orientation = 'H';
   var previewAnchor = null;
@@ -227,7 +228,7 @@
       return;
     }
     var occupant = board.shipAt(row, col);
-    if (occupant) {
+    if (!selectedShipId && occupant) {
       // Pick the ship back up so it can be moved.
       board.removeShip(occupant.id);
       selectedShipId = occupant.id;
@@ -480,12 +481,21 @@
     els.clear.addEventListener('click', clearFleet);
     els.start.addEventListener('click', startGame);
 
+    els.playerGrid.addEventListener('pointerdown', function (e) {
+      lastPointerType = e.pointerType;
+    });
     els.playerGrid.addEventListener('click', function (e) {
       var pos = cellFromEvent(e);
       if (!pos || game.phase !== 'setup') return;
       syncRoving('player', pos);
       previewAnchor = { row: pos.row, col: pos.col };
+      var placementSucceeded = !!selectedShipId &&
+        game.playerBoard.canPlace(selectedShipId, pos.row, pos.col, orientation);
       placeAt(pos.row, pos.col);
+      if (placementSucceeded && e.detail > 0 && lastPointerType && lastPointerType !== 'mouse') {
+        previewAnchor = null;
+        renderPreview();
+      }
     });
     els.playerGrid.addEventListener('mouseenter', function () {
       pointerOverPlayerGrid = true;
@@ -536,6 +546,7 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'r' && e.key !== 'R') return;
+      if (e.repeat) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (!game || game.phase !== 'setup') return;
       var onGrid = els.playerGrid.contains(document.activeElement);

@@ -1,3 +1,18 @@
+# QA summary
+
+**Total bugs found:** 8.
+
+**How they were found:**
+- Code review: 1 (#1).
+- Automated test: 1 (#2).
+- Devin Review: 2 (#3 and #4).
+- Browser play-testing: 1 (#5).
+- Independent QA: 3 (#6–#8); #6 was found by code review and confirmed in the browser, while #7 and #8 were found by play-testing.
+
+- **Misclick deletes your ship (#7):** While placing the Battleship, clicking a square that overlapped your Carrier didn't just say "doesn't fit", it quietly lifted the Carrier off the board.
+- **The AI and touching ships (#3):** When two ships touched end-to-end, sinking one could make the AI treat the wrong squares as sunk, leaving part of the sunk ship as a live target and marking the other ship's squares as finished.
+- **Ghost ship on phones (#8):** After you tapped to place a ship, a red "doesn't fit" outline of the next ship stayed drawn over the one you'd just placed, so a valid placement looked like an error.
+
 # Bug log
 
 Real bugs found while building and testing this game, in the order they were found. Each entry says what went wrong, how it was found, why it happened, and how it was fixed.
@@ -64,4 +79,40 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
-Apart from these, no bugs were found during browser play-testing. Testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. The browser console showed no errors.
+## 6. Holding R could rotate the ship back and forth
+
+**What went wrong:** During setup, holding R first turned the ship, then repeated key events turned it back again. The direction could keep changing for as long as the key was held.
+
+**How it was found:** Independent QA code review of the key handler, confirmed in the browser with a held key.
+
+**Root cause:** The page-level R shortcut handled repeating keydown events just like the first keydown, so each repeat toggled the direction again.
+
+**How it was fixed:** The key handler now ignores repeating keydown events. The automated test `UI Bug 6: holding R does not rotate repeatedly` checks that the direction stays vertical after the repeated event.
+
+---
+
+## 7. A placement misclick could pick up a ship that was already on the board
+
+**What went wrong:** While placing the Battleship, clicking a square that overlapped the Carrier did not just say it didn't fit: it quietly lifted the Carrier off the board.
+
+**How it was found:** Independent QA browser play-testing, with a misclick during placement.
+
+**Root cause:** After a selected ship failed its placement check, the code picked up any ship occupying the clicked square. That pickup was intended for when no ship was selected, not when a player was trying to place another ship.
+
+**How it was fixed:** A ship on the board is now picked up by clicking its cell only when no ship is selected. With a ship selected, an invalid placement keeps the existing "doesn't fit" message and leaves the placed ship in place. The tests `UI Bug 7: a placement misclick does not pick up the occupying ship` and `UI ship pickup still works when no ship is selected` cover both cases.
+
+---
+
+## 8. A touch placement left the next ship's invalid preview on the board
+
+**What went wrong:** On a phone-sized touch viewport, tapping to place a ship left a red "doesn't fit" outline for the next ship over the ship just placed, making the valid placement look like an error.
+
+**How it was found:** Independent QA play-testing on a phone-sized touch viewport.
+
+**Root cause:** The click handler kept the tap's cell as the preview anchor. After placing the ship, rendering used that same anchor for the next ship, even though touch input does not leave a mouse pointer hovering over the grid.
+
+**How it was fixed:** The game now remembers the pointer type and clears the preview anchor after a successful touch placement. Mouse and keyboard placement keep their previews. The tests `UI Bug 8: touch placement clears the stale ship preview`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
+
+---
+
+Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA later found the issues recorded in entries 6–8. The browser console showed no errors during the earlier testing.
