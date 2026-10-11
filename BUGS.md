@@ -109,9 +109,9 @@ Real bugs found while building and testing this game, in the order they were fou
 
 **How it was found:** Independent QA play-testing on a phone-sized touch viewport.
 
-**Root cause:** The click handler kept the tap's cell as the preview anchor. After placing the ship, rendering used that same anchor for the next ship, even though touch input does not leave a mouse pointer hovering over the grid.
+**Root cause:** The click handler cleared the tap's preview anchor after placing the ship, but the tapped cell remained focused. When the pointer later left the grid, the `mouseleave` handler re-anchored the preview to that focused cell without checking the input type, bringing back the next ship's red outline.
 
-**How it was fixed:** The game now remembers the pointer type and clears the preview anchor after a successful touch placement. Mouse and keyboard placement keep their previews. The tests `UI Bug 8: touch placement clears the stale ship preview`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
+**How it was fixed:** The game remembers the pointer type from pointer down and pointer over events. After a touch placement it clears the preview anchor, and when the pointer leaves it only restores a preview from the focused cell for mouse input or when the pointer type is unknown. Mouse and keyboard previews still work. The tests `UI Bug 8: touch placement stays clear after the pointer leaves the grid`, `UI desktop mouseleave keeps the next-ship preview on the focused cell`, `UI desktop mouse placement keeps the next-ship preview at the pointer`, and `UI keyboard placement keeps the next-ship preview on the focused cell` check these behaviors.
 
 ---
 

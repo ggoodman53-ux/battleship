@@ -484,6 +484,9 @@
     els.playerGrid.addEventListener('pointerdown', function (e) {
       lastPointerType = e.pointerType;
     });
+    els.playerGrid.addEventListener('pointerover', function (e) {
+      lastPointerType = e.pointerType;
+    });
     els.playerGrid.addEventListener('click', function (e) {
       var pos = cellFromEvent(e);
       if (!pos || game.phase !== 'setup') return;
@@ -516,7 +519,8 @@
     });
     els.playerGrid.addEventListener('mouseleave', function () {
       pointerOverPlayerGrid = false;
-      if (document.activeElement && els.playerGrid.contains(document.activeElement)) {
+      if (document.activeElement && els.playerGrid.contains(document.activeElement) &&
+          (lastPointerType === null || lastPointerType === 'mouse')) {
         var pos = cellFromEvent({ target: document.activeElement });
         previewAnchor = pos ? { row: pos.row, col: pos.col } : null;
       } else {

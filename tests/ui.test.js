@@ -52,8 +52,10 @@ function createHarness() {
     });
   }
   function mouseenter(target) { dispatch(target, 'mouseenter', { bubbles: false }); }
+  function mouseleave(target) { dispatch(target, 'mouseleave', { bubbles: false }); }
   function mouseover(target) { dispatch(target, 'mouseover'); }
   function pointerdown(target, pointerType) { dispatch(target, 'pointerdown', { pointerType: pointerType }); }
+  function pointerover(target, pointerType) { dispatch(target, 'pointerover', { pointerType: pointerType }); }
   function advance(milliseconds) {
     now += milliseconds;
     let due;
@@ -83,8 +85,10 @@ function createHarness() {
     click: click,
     keydown: keydown,
     mouseenter: mouseenter,
+    mouseleave: mouseleave,
     mouseover: mouseover,
     pointerdown: pointerdown,
+    pointerover: pointerover,
     previewCells: previewCells,
     shipButton: shipButton
   };
@@ -140,13 +144,29 @@ module.exports = function ({ test, assert }) {
     assert.ok(ui.document.getElementById('message').textContent.indexOf('Carrier picked up') !== -1);
   });
 
-  test('UI Bug 8: touch placement clears the stale ship preview', function () {
+  test('UI Bug 8: touch placement stays clear after the pointer leaves the grid', function () {
     const ui = createHarness();
     const cell = ui.cell('player-grid', 0, 0);
     ui.pointerdown(cell, 'touch');
+    ui.pointerover(cell, 'touch');
     ui.mouseover(cell);
+    cell.focus();
     ui.click(cell, { detail: 1 });
     assert.strictEqual(ui.previewCells().length, 0);
+    ui.mouseleave(ui.document.getElementById('player-grid'));
+    assert.strictEqual(ui.previewCells().length, 0);
+  });
+
+  test('UI desktop mouseleave keeps the next-ship preview on the focused cell', function () {
+    const ui = createHarness();
+    const cell = ui.cell('player-grid', 0, 0);
+    ui.pointerdown(cell, 'mouse');
+    ui.pointerover(cell, 'mouse');
+    ui.mouseover(cell);
+    cell.focus();
+    ui.click(cell, { detail: 1 });
+    ui.mouseleave(ui.document.getElementById('player-grid'));
+    assert.ok(ui.previewCells().indexOf(cell) !== -1);
   });
 
   test('UI desktop mouse placement keeps the next-ship preview at the pointer', function () {
