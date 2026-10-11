@@ -1,11 +1,11 @@
 # QA summary
 
-**Total bugs found:** 9.
+**Total bugs found:** 10.
 
 **How they were found:**
 - Code review: 1 (#1).
 - Automated test: 1 (#2).
-- Devin Review: 3 (#3, #4, and #9).
+- Devin Review: 4 (#3, #4, #9, and #10).
 - Browser play-testing: 1 (#5).
 - Independent QA: 3 (#6–#8); #6 was found by code review and confirmed in the browser, while #7 and #8 were found by play-testing.
 
@@ -127,4 +127,16 @@ Real bugs found while building and testing this game, in the order they were fou
 
 ---
 
-Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA and Devin Review later found the issues recorded in entries 6–9. The browser console showed no errors during the earlier testing.
+## 10. New Game kept the previous game's pointer type
+
+**What went wrong:** After a touch game, starting a new game and focusing a grid cell did not restore its preview when the pointer left the grid. The new game still behaved as if the last pointer was touch.
+
+**How it was found:** Devin Review, while reviewing the independent QA pull request.
+
+**Root cause:** `newGame()` reset the preview anchor and hover flag but not `lastPointerType`, so a touch from the last game still blocked the focused-cell preview on mouseleave.
+
+**How it was fixed:** `newGame()` now resets `lastPointerType` along with the other preview state. The test `UI Bug 10: New Game resets the remembered pointer type` checks that focusing a cell in a new game restores its preview after mouseleave when there has been no new pointer input.
+
+---
+
+Earlier browser play-testing covered wins and losses, every difficulty, manual placement with rotation, New Game during a game and after one ended, keyboard play, and a phone-sized screen. Independent QA and Devin Review later found the issues recorded in entries 6–10. The browser console showed no errors during the earlier testing.

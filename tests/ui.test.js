@@ -183,6 +183,19 @@ module.exports = function ({ test, assert }) {
     assert.ok(ui.previewCells().indexOf(cell) !== -1);
   });
 
+  test('UI Bug 10: New Game resets the remembered pointer type', function () {
+    const ui = createHarness();
+    const firstCell = ui.cell('player-grid', 0, 0);
+    ui.pointerdown(firstCell, 'touch');
+    ui.pointerover(firstCell, 'touch');
+    ui.click(firstCell, { detail: 1 });
+    ui.click(ui.document.getElementById('new-game'));
+    const nextCell = ui.cell('player-grid', 2, 0);
+    nextCell.focus();
+    ui.mouseleave(ui.document.getElementById('player-grid'));
+    assert.ok(ui.previewCells().indexOf(nextCell) !== -1);
+  });
+
   test('UI desktop mouse placement keeps the next-ship preview at the pointer', function () {
     const ui = createHarness();
     const cell = ui.cell('player-grid', 0, 0);

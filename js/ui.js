@@ -93,6 +93,7 @@
   function newGame() {
     cancelComputerTurn();
     pointerOverPlayerGrid = false;
+    lastPointerType = null;
     game = new G.Game({ difficulty: els.difficulty.value });
     selectedShipId = FLEET[0].id;
     orientation = 'H';
